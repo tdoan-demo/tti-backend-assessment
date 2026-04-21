@@ -49,17 +49,31 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 
 - `submission_answers`
   - `id`
-  - `submission_id` (FK)
-  - `instrument_question_id` (FK)
+  - `submission_id`
+  - `instrument_question_id`
   - `answer_value`
   - timestamps
   - unique index on (`submission_id`, `instrument_question_id`)
 
-### Design decisions
+## Design decisions and trade-offs
 
-- Questions and answers are modeled as separate relational tables instead of JSON blobs so the schema stays normalized and the summary endpoint can be queried and reasoned about cleanly.
-- `answer_value` is stored as text for simplicity. Type safety is enforced at the application layer using the instrument question's `response_type`.
-- Nested route scoping is used for patient submissions so requests cannot fetch a submission outside the parent patient context.
+- Questions and answers are modeled as separate relational tables instead of JSON blobs so the schema stays normalized and the summary endpoint remains queryable and easy to reason about.
+
+- `answer_value` is stored in a single column rather than separate typed columns. This keeps the schema smaller for the assessment and keeps the submission flow straightforward, while leaving type enforcement in the validation layer. The trade-off is that the database itself is less strongly typed for answer storage.
+
+- `submitted_at` is modeled explicitly on submissions rather than inferred from `created_at`. This keeps the API aligned with the domain requirement that an instrument is completed at a specific date and time, and it allows seed data and tests to exercise time-based behavior such as newest-first ordering and summary date ranges. The trade-off is that the API accepts a client-provided timestamp, which is useful for seeded or imported data and would likely need tighter controls in a production setting.
+
+- Submission creation and summary aggregation are separated into service classes to keep controllers focused on request/response orchestration. This keeps the business logic easier to follow, test, and extend.
+
+- Eager loading is used for nested submission responses and summary aggregation to avoid N+1 query behavior when loading related instruments, questions, and answers. The trade-off is that the current summary implementation still favors readability over heavier query-level aggregation.
+
+- Submission validation uses custom Rule classes for question membership and answer type checks. This keeps the request layer more readable and makes the domain rules easier to test and evolve independently. The trade-off is additional validation classes compared with keeping all logic inline in a single Form Request.
+
+- Factories are used for domain models in tests and seed setup to keep record creation consistent and reusable. This reduces duplication and makes test setup easier to extend as the domain grows. The trade-off is a slightly larger supporting code surface compared with creating all records inline.
+
+- `.env.example` uses `SESSION_DRIVER=file` to keep local setup friction low for this API-focused assessment. This avoids requiring an additional sessions table that is outside the core scope of the exercise. The trade-off is that this favors fast local bootstrapping over database-backed session storage.
+
+- Instrument versioning is intentionally omitted to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve the meaning of historical submissions.
 
 ## Setup
 
@@ -160,22 +174,6 @@ php artisan test
 ### Summary
 
 `GET /api/patients/{patient}/summary?instrument_id=1`
-
-## Trade-offs
-
-- Instrument versioning is intentionally omitted to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve the meaning of historical submissions.
-
-- Summary aggregation is implemented in a service layer with eager loading for readability and maintainability. This keeps the aggregation rules easy to follow for the assessment. If the dataset grows substantially, the next step would be pushing more aggregation into grouped SQL queries or cached summary projections.
-
-- `answer_value` is stored in a single column rather than separate typed columns. This keeps the schema smaller for the assessment and keeps the submission flow straightforward, while leaving type enforcement in the validation layer. The trade-off is that the database itself is less strongly typed for answer storage.
-
-- `submitted_at` is modeled explicitly on submissions rather than inferred from `created_at`. This keeps the API aligned with the domain requirement that an instrument is completed at a specific date and time, and it allows seed data and tests to exercise time-based behavior such as newest-first ordering and summary date ranges. The trade-off is that the API accepts a client-provided timestamp, which is useful for seeded or imported data but would likely need tighter controls in a production setting.
-
-- Factories are used for domain models in tests and seed setup to keep record creation consistent and reusable. This reduces duplication and makes test setup easier to extend as the domain grows. The trade-off is a slightly larger supporting code surface compared with creating all records inline.
-
-- Submission validation uses custom Rule classes for question membership and answer type checks. This keeps the request layer more readable and makes the domain rules easier to test and evolve independently. The trade-off is additional validation classes compared with keeping all logic inline in a single Form Request.
-
-- `.env.example` uses `SESSION_DRIVER=file` to keep local setup friction low for this API-focused assessment. This avoids requiring an additional sessions table that is outside the core scope of the exercise. The trade-off is that this favors fast local bootstrapping over database-backed session storage.
 
 ## What I would add with more time
 
