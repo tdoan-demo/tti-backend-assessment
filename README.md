@@ -9,7 +9,7 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 - Form Request validation with domain-level submission validation
 - API Resources for consistent response shapes
 - Service classes for submission creation and summary aggregation
-- Named rate limiters for read and write API routes
+- Named read/write rate limiters applied at the route layer using Laravel's built-in rate limiting system
 - Seed data for local testing
 - Feature tests covering key endpoints
 - Docker Compose setup for local development
@@ -73,7 +73,9 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 
 - **Factories are used for domain models in tests and seed setup** to keep record creation consistent and reusable. This reduces duplication and makes test setup easier to extend as the domain grows. The trade-off is a slightly larger supporting code surface compared with creating all records inline.
 
-- **`.env.example` uses `SESSION_DRIVER=file`** to keep local setup friction low for this API-focused assessment. This avoids requiring an additional sessions table that is outside the core scope of the exercise. The trade-off is that this favors fast local bootstrapping over database-backed session storage.
+- **Named read/write rate limiters are applied at the route layer** using Laravel's built-in rate limiting system. This keeps throttling concerns out of controllers and makes the policy easy to adjust centrally. The trade-off is that the current limits are config-driven but still static rather than environment-specific per deployment tier.
+
+- **`.env.example` uses `SESSION_DRIVER=file` and `CACHE_STORE=file`** to keep local setup friction low for this API-focused assessment. This avoids requiring additional sessions or cache tables that are outside the core scope of the exercise. The trade-off is that this favors fast local bootstrapping over database-backed session and cache storage.
 
 - **Instrument versioning is intentionally omitted** to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve the meaning of historical submissions.
 
@@ -82,7 +84,7 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 1. Clone the repository and move into the project directory.
 2. Install PHP dependencies with `composer install`.
 3. Copy `.env.example` to `.env`.
-4. Configure `.env` for MySQL by uncommenting and filling in `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` with your local MySQL credentials. The project expects a local MySQL database. `SESSION_DRIVER=file` is used in `.env.example` to keep local setup friction low for this API-focused assessment.
+4. Configure `.env` for MySQL by uncommenting and filling in `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` with your local MySQL credentials. The project expects a local MySQL database. `SESSION_DRIVER=file` and `CACHE_STORE=file` are used in `.env.example` to keep local setup friction low for this API-focused assessment.
 5. Generate an application key with `php artisan key:generate`.
 6. Run:
 
@@ -100,7 +102,7 @@ php artisan test
 
 ### Docker Compose (optional)
 
-A Docker Compose setup is included for a reproducible local environment with PHP and MySQL configured together. The Docker workflow uses `.env.docker.example` automatically.
+A Docker Compose setup is included for a reproducible local environment with PHP and MySQL configured together. The Docker workflow uses `.env.docker.example` automatically, including Docker-safe database settings and file-backed cache for smoother first boot behavior.
 
 1. Start the containers:
 

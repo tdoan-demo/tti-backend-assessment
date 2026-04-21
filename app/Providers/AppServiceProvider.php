@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('pro-read', function (Request $request): Limit {
             $key = $request->user()?->getAuthIdentifier() ?? $request->ip();
 
-            return Limit::perMinute(120)
+            return Limit::perMinute((int) config('pro_api.rate_limits.read_per_minute'))
                 ->by('pro-read|' . $key)
                 ->response(fn (Request $request, array $headers) => response()->json([
                     'message' => 'Too many requests. Please retry shortly.',
@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('pro-write', function (Request $request): Limit {
             $key = $request->user()?->getAuthIdentifier() ?? $request->ip();
 
-            return Limit::perMinute(30)
+            return Limit::perMinute((int) config('pro_api.rate_limits.write_per_minute'))
                 ->by('pro-write|' . $key)
                 ->response(fn (Request $request, array $headers) => response()->json([
                     'message' => 'Too many requests. Please retry shortly.',
