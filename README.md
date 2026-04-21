@@ -66,7 +66,7 @@ This repository contains a Laravel 11 implementation of the Patient Reported Out
 1. Clone the repository and move into the project directory.
 2. Install PHP dependencies with `composer install`.
 3. Copy `.env.example` to `.env`.
-4. Configure `.env` for MySQL, including `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`. The project expects a local MySQL database. `SESSION_DRIVER=file` is used in `.env.example` to keep local setup friction low for this API-focused assessment.
+4. Configure `.env` for MySQL by uncommenting and filling in `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` with your local MySQL credentials. The project expects a local MySQL database. `SESSION_DRIVER=file` is used in `.env.example` to keep local setup friction low for this API-focused assessment.
 5. Generate an application key with `php artisan key:generate`.
 6. Run:
 
