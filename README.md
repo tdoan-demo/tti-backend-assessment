@@ -13,6 +13,7 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 - Seed data for local testing
 - Feature tests covering key endpoints
 - Docker Compose setup for local development
+- Scramble-powered OpenAPI / Swagger documentation exposed at `/docs/api` and `/docs/api.json`
 
 ## Schema design
 
@@ -98,6 +99,21 @@ php artisan serve
 
 ```bash
 php artisan test
+```
+
+### OpenAPI / Swagger documentation
+
+Swagger-style API documentation is generated with [dedoc/scramble](https://scramble.dedoc.co/), which analyzes Laravel routes, Form Requests, and API Resources without requiring handwritten controller annotations.
+
+After installing Composer dependencies, the docs are available at:
+
+- `GET /docs/api` — interactive documentation UI
+- `GET /docs/api.json` — generated OpenAPI JSON document
+
+To export a static OpenAPI document for sharing or versioning:
+
+```bash
+php artisan scramble:export
 ```
 
 ### Docker Compose (optional)
@@ -209,7 +225,6 @@ Use the `id` returned from the patient response as `{patient_id}`. Use the `id` 
 
 ## What I would add with more time
 
-- OpenAPI / Swagger documentation for a formal machine-readable API contract in addition to the README examples.
 - Authentication and authorization, likely using Laravel Sanctum, so patient and submission data can be scoped to authenticated users and roles.
 - Instrument versioning or question snapshots so historical submissions remain semantically stable if an instrument changes later.
 - More standardized API error formatting so validation, not-found, and domain errors follow a more consistent response shape.
