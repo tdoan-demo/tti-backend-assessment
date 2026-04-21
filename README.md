@@ -211,7 +211,7 @@ php artisan scramble:export
 
 - **Submission creation and summary aggregation are separated into service classes** to keep controllers focused on request/response orchestration. This keeps the business logic easier to follow, test, and extend.
 
-- **Eager loading is used for nested submission responses and summary aggregation** to avoid N+1 query behavior when loading related instruments, questions, and answers. The trade-off is that the current summary implementation still favors readability over heavier query-level aggregation.
+- **Eager loading is used for nested submission responses and summary aggregation** to avoid N+1 query behavior when loading related instruments, questions, and answers. The schema also includes targeted indexes to support common lookups such as instrument-based queries and patient submission history, and submission listing is paginated to keep read responses bounded. The trade-off is that the current summary implementation still favors readability over heavier query-level aggregation or cached summary projections.
 
 - **Submission validation uses custom Rule classes** for question membership and answer type checks. This keeps the request layer more readable and makes the domain rules easier to test and evolve independently. The trade-off is additional validation classes compared with keeping all logic inline in a single Form Request.
 
@@ -225,7 +225,7 @@ php artisan scramble:export
 
 ## What I would add with more time
 
-- Authentication and authorization, likely using Laravel Sanctum, so patient and submission data can be scoped to authenticated users and roles.
+- Authentication and authorization, likely using Laravel Sanctum, so patient and submission data can be scoped to authenticated users and roles. I chose to implement rate limiting for this assessment’s optional API-hardening path and would treat auth as the next step in a fuller application.
 - Instrument versioning or question snapshots so historical submissions remain semantically stable if an instrument changes later.
 - More standardized API error formatting so validation, not-found, and domain errors follow a more consistent response shape.
 - Additional test coverage around larger summary aggregation scenarios, malformed payload edge cases, and broader request-contract validation.
