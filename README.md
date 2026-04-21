@@ -101,21 +101,6 @@ php artisan serve
 php artisan test
 ```
 
-### OpenAPI / Swagger documentation
-
-Swagger-style API documentation is generated with [dedoc/scramble](https://scramble.dedoc.co/), which analyzes Laravel routes, Form Requests, and API Resources without requiring handwritten controller annotations.
-
-After installing Composer dependencies, the docs are available at:
-
-- `GET /docs/api` — interactive documentation UI
-- `GET /docs/api.json` — generated OpenAPI JSON document
-
-To export a static OpenAPI document for sharing or versioning:
-
-```bash
-php artisan scramble:export
-```
-
 ### Docker Compose (optional)
 
 A Docker Compose setup is included for a reproducible local environment with PHP and MySQL configured together. The Docker workflow uses `.env.docker.example` automatically, including Docker-safe database settings and file-backed cache for smoother first boot behavior.
@@ -222,6 +207,21 @@ Use the `id` returned from the patient response as `{patient_id}`. Use the `id` 
 ### Summary
 
 `GET /api/patients/{patient_id}/summary?instrument_id={instrument_id}`
+
+### OpenAPI / Swagger documentation
+
+Swagger-style API documentation is generated with [dedoc/scramble](https://scramble.dedoc.co/), which analyzes Laravel routes, Form Requests, and API Resources without requiring handwritten controller annotations.
+
+After installing Composer dependencies, the docs are available at:
+
+- `GET /docs/api` — interactive documentation UI
+- `GET /docs/api.json` — generated OpenAPI JSON document
+
+To export a static OpenAPI document for sharing or versioning:
+
+```bash
+php artisan scramble:export
+```
 
 ## What I would add with more time
 
