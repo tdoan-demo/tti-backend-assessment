@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Instrument;
+use App\Models\InstrumentQuestion;
 use App\Models\Patient;
 use App\Models\Submission;
+use App\Models\SubmissionAnswer;
 use App\Support\AnswerValueCaster;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -169,9 +171,8 @@ class SubmissionApiTest extends TestCase
             '2026-04-08 10:00:00'
         );
 
-        $otherPatient = Patient::query()->create([
+        $otherPatient = Patient::factory()->create([
             'name' => 'Noah Patel',
-            'date_of_birth' => '1988-03-21',
             'mrn' => 'MRN-10002',
         ]);
 
@@ -214,16 +215,18 @@ class SubmissionApiTest extends TestCase
     {
         [$patient, $instrument, $questions] = $this->seedReferenceData();
 
-        $otherInstrument = Instrument::query()->create([
+        $otherInstrument = Instrument::factory()->create([
             'title' => 'Other Instrument',
             'description' => 'Used to test question scoping.',
         ]);
 
-        $foreignQuestion = $otherInstrument->questions()->create([
-            'prompt' => 'Foreign question',
-            'response_type' => AnswerValueCaster::FREE_TEXT,
-            'sort_order' => 1,
-        ]);
+        $foreignQuestion = InstrumentQuestion::factory()
+            ->for($otherInstrument)
+            ->freeText()
+            ->create([
+                'prompt' => 'Foreign question',
+                'sort_order' => 1,
+            ]);
 
         $response = $this->postJson("/api/patients/{$patient->id}/submissions", [
             'instrument_id' => $instrument->id,
@@ -251,33 +254,30 @@ class SubmissionApiTest extends TestCase
 
     protected function seedReferenceData(): array
     {
-        $patient = Patient::query()->create([
+        $patient = Patient::factory()->create([
             'name' => 'Ava Chen',
             'date_of_birth' => '1991-06-12',
             'mrn' => 'MRN-10001',
         ]);
 
-        $instrument = Instrument::query()->create([
+        $instrument = Instrument::factory()->create([
             'title' => 'Weekly Symptom Check-In',
             'description' => 'A short weekly symptom and quality of life assessment.',
         ]);
 
-        $questions = $instrument->questions()->createMany([
-            [
+        $questions = collect([
+            InstrumentQuestion::factory()->for($instrument)->scale()->create([
                 'prompt' => 'Rate your fatigue this week.',
-                'response_type' => AnswerValueCaster::SCALE_1_5,
                 'sort_order' => 1,
-            ],
-            [
+            ]),
+            InstrumentQuestion::factory()->for($instrument)->yesNo()->create([
                 'prompt' => 'Did you experience nausea?',
-                'response_type' => AnswerValueCaster::YES_NO,
                 'sort_order' => 2,
-            ],
-            [
+            ]),
+            InstrumentQuestion::factory()->for($instrument)->freeText()->create([
                 'prompt' => 'Anything else you want your care team to know?',
-                'response_type' => AnswerValueCaster::FREE_TEXT,
                 'sort_order' => 3,
-            ],
+            ]),
         ]);
 
         return [$patient, $instrument, $questions];
@@ -290,23 +290,24 @@ class SubmissionApiTest extends TestCase
         array $answers,
         string $submittedAt
     ): Submission {
-        $submission = Submission::query()->create([
-            'patient_id' => $patient->id,
-            'instrument_id' => $instrument->id,
-            'submitted_at' => $submittedAt,
-        ]);
+        $submission = Submission::factory()
+            ->for($patient)
+            ->for($instrument)
+            ->create([
+                'submitted_at' => $submittedAt,
+            ]);
 
-        $submission->answers()->createMany(
-            $questions->values()->map(function ($question, int $index) use ($answers) {
-                return [
-                    'instrument_question_id' => $question->id,
+        foreach ($questions->values() as $index => $question) {
+            SubmissionAnswer::factory()
+                ->for($submission, 'submission')
+                ->for($question, 'question')
+                ->create([
                     'answer_value' => AnswerValueCaster::normalizeForStorage(
                         $question->response_type,
                         $answers[$index]
                     ),
-                ];
-            })->all()
-        );
+                ]);
+        }
 
         return $submission;
     }

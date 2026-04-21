@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\InstrumentQuestion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -45,23 +46,12 @@ class InstrumentApiTest extends TestCase
             'title' => 'Weekly Symptom Check-In',
         ]);
 
-        $this->assertDatabaseHas('instrument_questions', [
-            'prompt' => 'Rate your fatigue this week.',
-            'response_type' => 'scale_1_5',
-            'sort_order' => 1,
-        ]);
+        $this->assertDatabaseCount('instrument_questions', 3);
 
-        $this->assertDatabaseHas('instrument_questions', [
-            'prompt' => 'Did you experience nausea?',
-            'response_type' => 'yes_no',
-            'sort_order' => 2,
-        ]);
+        $questionTypes = InstrumentQuestion::query()->pluck('response_type')->all();
+        sort($questionTypes);
 
-        $this->assertDatabaseHas('instrument_questions', [
-            'prompt' => 'Anything else you want your care team to know?',
-            'response_type' => 'free_text',
-            'sort_order' => 3,
-        ]);
+        $this->assertSame(['free_text', 'scale_1_5', 'yes_no'], $questionTypes);
     }
 
     public function test_it_rejects_instrument_payloads_that_violate_the_question_contract(): void

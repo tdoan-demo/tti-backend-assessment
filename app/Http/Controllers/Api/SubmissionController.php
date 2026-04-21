@@ -39,21 +39,12 @@ class SubmissionController extends Controller
         ], 201);
     }
 
-    public function show(Patient $patient, int $submission): JsonResponse
+    public function show(Patient $patient, Submission $submission): JsonResponse
     {
-        $submission = Submission::query()
-            ->where('patient_id', $patient->id)
-            ->with([
-                'instrument',
-                'answers.question',
-            ])
-            ->find($submission);
-
-        if (! $submission) {
-            return response()->json([
-                'message' => 'Resource not found.',
-            ], 404);
-        }
+        $submission->load([
+            'instrument',
+            'answers.question',
+        ]);
 
         return response()->json([
             'message' => 'Submission retrieved successfully.',

@@ -55,11 +55,11 @@ class PatientApiTest extends TestCase
 
     public function test_it_rejects_duplicate_mrns(): void
     {
-        $this->postJson('/api/patients', [
-            'name' => 'Jane Doe',
-            'date_of_birth' => '1990-05-14',
+        Patient::factory()->create([
+            'name' => 'Existing Patient',
+            'date_of_birth' => '1988-08-21',
             'mrn' => 'MRN-10001',
-        ])->assertCreated();
+        ]);
 
         $response = $this->postJson('/api/patients', [
             'name' => 'John Doe',

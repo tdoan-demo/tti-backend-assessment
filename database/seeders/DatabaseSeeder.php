@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Instrument;
+use App\Models\InstrumentQuestion;
 use App\Models\Patient;
 use App\Models\Submission;
+use App\Models\SubmissionAnswer;
 use App\Support\AnswerValueCaster;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -15,76 +17,96 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function (): void {
-            $patient = Patient::query()->create([
+            $patient = Patient::factory()->create([
                 'name' => 'Ava Chen',
                 'date_of_birth' => '1991-06-12',
                 'mrn' => 'MRN-10001',
             ]);
 
-            $instrument = Instrument::query()->create([
+            $instrument = Instrument::factory()->create([
                 'title' => 'Weekly Symptom Check-In',
                 'description' => 'A short weekly symptom and quality of life assessment.',
             ]);
 
-            $questions = $instrument->questions()->createMany([
-                [
+            $fatigueQuestion = InstrumentQuestion::factory()
+                ->for($instrument)
+                ->scale()
+                ->create([
                     'prompt' => 'Rate your fatigue this week.',
-                    'response_type' => AnswerValueCaster::SCALE_1_5,
                     'sort_order' => 1,
-                ],
-                [
+                ]);
+
+            $nauseaQuestion = InstrumentQuestion::factory()
+                ->for($instrument)
+                ->yesNo()
+                ->create([
                     'prompt' => 'Did you experience nausea?',
-                    'response_type' => AnswerValueCaster::YES_NO,
                     'sort_order' => 2,
-                ],
-                [
+                ]);
+
+            $notesQuestion = InstrumentQuestion::factory()
+                ->for($instrument)
+                ->freeText()
+                ->create([
                     'prompt' => 'Anything else you want your care team to know?',
-                    'response_type' => AnswerValueCaster::FREE_TEXT,
                     'sort_order' => 3,
-                ],
-            ]);
+                ]);
 
-            $firstSubmission = Submission::query()->create([
-                'patient_id' => $patient->id,
-                'instrument_id' => $instrument->id,
-                'submitted_at' => Carbon::parse('2026-04-01T10:00:00Z'),
-            ]);
+            $firstSubmission = Submission::factory()
+                ->for($patient)
+                ->for($instrument)
+                ->create([
+                    'submitted_at' => Carbon::parse('2026-04-01T10:00:00Z'),
+                ]);
 
-            $firstSubmission->answers()->createMany([
-                [
-                    'instrument_question_id' => $questions[0]->id,
-                    'answer_value' => '4',
-                ],
-                [
-                    'instrument_question_id' => $questions[1]->id,
-                    'answer_value' => '1',
-                ],
-                [
-                    'instrument_question_id' => $questions[2]->id,
-                    'answer_value' => 'Mild fatigue after treatment day.',
-                ],
-            ]);
+            SubmissionAnswer::factory()
+                ->for($firstSubmission, 'submission')
+                ->for($fatigueQuestion, 'question')
+                ->create([
+                    'answer_value' => AnswerValueCaster::normalizeForStorage(AnswerValueCaster::SCALE_1_5, 4),
+                ]);
 
-            $secondSubmission = Submission::query()->create([
-                'patient_id' => $patient->id,
-                'instrument_id' => $instrument->id,
-                'submitted_at' => Carbon::parse('2026-04-08T10:00:00Z'),
-            ]);
+            SubmissionAnswer::factory()
+                ->for($firstSubmission, 'submission')
+                ->for($nauseaQuestion, 'question')
+                ->create([
+                    'answer_value' => AnswerValueCaster::normalizeForStorage(AnswerValueCaster::YES_NO, true),
+                ]);
 
-            $secondSubmission->answers()->createMany([
-                [
-                    'instrument_question_id' => $questions[0]->id,
-                    'answer_value' => '3',
-                ],
-                [
-                    'instrument_question_id' => $questions[1]->id,
-                    'answer_value' => '0',
-                ],
-                [
-                    'instrument_question_id' => $questions[2]->id,
-                    'answer_value' => '',
-                ],
-            ]);
+            SubmissionAnswer::factory()
+                ->for($firstSubmission, 'submission')
+                ->for($notesQuestion, 'question')
+                ->create([
+                    'answer_value' => AnswerValueCaster::normalizeForStorage(AnswerValueCaster::FREE_TEXT, 'Mild fatigue after treatment day.'),
+                ]);
+
+            $secondSubmission = Submission::factory()
+                ->for($patient)
+                ->for($instrument)
+                ->create([
+                    'submitted_at' => Carbon::parse('2026-04-08T10:00:00Z'),
+                ]);
+
+            SubmissionAnswer::factory()
+                ->for($secondSubmission, 'submission')
+                ->for($fatigueQuestion, 'question')
+                ->create([
+                    'answer_value' => AnswerValueCaster::normalizeForStorage(AnswerValueCaster::SCALE_1_5, 3),
+                ]);
+
+            SubmissionAnswer::factory()
+                ->for($secondSubmission, 'submission')
+                ->for($nauseaQuestion, 'question')
+                ->create([
+                    'answer_value' => AnswerValueCaster::normalizeForStorage(AnswerValueCaster::YES_NO, false),
+                ]);
+
+            SubmissionAnswer::factory()
+                ->for($secondSubmission, 'submission')
+                ->for($notesQuestion, 'question')
+                ->create([
+                    'answer_value' => AnswerValueCaster::normalizeForStorage(AnswerValueCaster::FREE_TEXT, ''),
+                ]);
         });
     }
 }

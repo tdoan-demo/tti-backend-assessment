@@ -12,6 +12,7 @@ Route::post('/instruments', [InstrumentController::class, 'store']);
 Route::scopeBindings()->group(function (): void {
     Route::post('/patients/{patient}/submissions', [SubmissionController::class, 'store']);
     Route::get('/patients/{patient}/submissions', [SubmissionController::class, 'index']);
-    Route::get('/patients/{patient}/submissions/{submission}', [SubmissionController::class, 'show']);
+    Route::get('/patients/{patient}/submissions/{submission}', [SubmissionController::class, 'show'])
+        ->missing(fn () => response()->json(['message' => 'Resource not found.'], 404));
     Route::get('/patients/{patient}/summary', [PatientSummaryController::class, 'show']);
 });
