@@ -1,6 +1,6 @@
 # TTI Backend Engineer Assessment - Patient Reported Outcomes (PRO) API
 
-This repository contains a Laravel 13 implementation of the Patient Reported Outcomes (PRO) API. It implements the required PRO API using Laravel migrations, Eloquent models, Form Requests, API Resources, service classes, seed data, and feature tests.
+This repository contains a Laravel 13 implementation of the Patient Reported Outcomes (PRO) API. It implements the required PRO API using Laravel migrations, Eloquent models, Form Requests, API Resources, service classes, seed data, and automated tests.
 
 ## What is included
 
@@ -11,7 +11,7 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 - Service classes for submission creation and summary aggregation
 - Named read/write rate limiters applied at the route layer using Laravel's built-in rate limiting system
 - Seed data for local testing
-- Feature tests covering key endpoints
+- Feature tests covering key endpoints and unit tests for answer validation, normalization, and casting
 - Docker Compose setup for local development
 - Scramble-powered OpenAPI / Swagger documentation exposed at `/docs/api` and `/docs/api.json`
 
