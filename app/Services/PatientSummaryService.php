@@ -8,8 +8,14 @@ use App\Models\Submission;
 use App\Support\AnswerValueCaster;
 use Illuminate\Support\Collection;
 
+/**
+ * Domain service that builds aggregated summary data for a patient and instrument.
+ */
 class PatientSummaryService
 {
+    /**
+     * The service eagerly loads the related answers/questions once, then builds an API-ready summary payload in memory.
+     */
     public function build(Patient $patient, Instrument $instrument): array
     {
         $instrument->load('questions');
@@ -44,6 +50,9 @@ class PatientSummaryService
         ];
     }
 
+    /**
+     * Each question is aggregated independently so summary output stays aligned with the original instrument structure.
+     */
     protected function summarizeQuestion($question, Collection $submissions): array
     {
         $answers = $submissions

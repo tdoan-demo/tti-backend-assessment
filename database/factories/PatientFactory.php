@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<Patient>
  */
+/**
+ * Factory for creating patient records in tests and seed data.
+ */
 class PatientFactory extends Factory
 {
     protected $model = Patient::class;

@@ -6,6 +6,9 @@ use App\Support\AnswerValueCaster;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
+/**
+ * Unit tests for answer value validation, normalization, and output casting.
+ */
 class AnswerValueCasterTest extends TestCase
 {
     #[DataProvider('validScaleValues')]

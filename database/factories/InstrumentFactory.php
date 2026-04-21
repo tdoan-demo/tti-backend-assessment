@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<Instrument>
  */
+/**
+ * Factory for creating instrument records in tests and seed data.
+ */
 class InstrumentFactory extends Factory
 {
     protected $model = Instrument::class;

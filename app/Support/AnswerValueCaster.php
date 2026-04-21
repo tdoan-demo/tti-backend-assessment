@@ -4,12 +4,18 @@ namespace App\Support;
 
 use InvalidArgumentException;
 
+/**
+ * Support helper for validating, normalizing, and casting answer values by response type.
+ */
 class AnswerValueCaster
 {
     public const SCALE_1_5 = 'scale_1_5';
     public const YES_NO = 'yes_no';
     public const FREE_TEXT = 'free_text';
 
+    /**
+     * These constants are reused by validation rules and factories so response types stay centralized.
+     */
     public static function allowedTypes(): array
     {
         return [
@@ -19,6 +25,9 @@ class AnswerValueCaster
         ];
     }
 
+    /**
+     * Validation happens at the application layer because `answer_value` is stored as a single text column.
+     */
     public static function isValid(string $responseType, mixed $value): bool
     {
         return match ($responseType) {
@@ -32,6 +41,9 @@ class AnswerValueCaster
         };
     }
 
+    /**
+     * All accepted input shapes are normalized into the single-column storage format used by `submission_answers`.
+     */
     public static function normalizeForStorage(string $responseType, mixed $value): string
     {
         if (! self::isValid($responseType, $value)) {
@@ -46,6 +58,9 @@ class AnswerValueCaster
         };
     }
 
+    /**
+     * Stored string values are converted back into API-friendly shapes before serialization.
+     */
     public static function castForOutput(?string $responseType, mixed $value): mixed
     {
         if ($responseType === null) {
@@ -60,6 +75,9 @@ class AnswerValueCaster
         };
     }
 
+    /**
+     * The accepted yes/no input contract is intentionally narrow to avoid ambiguous natural-language values.
+     */
     public static function isBoolLike(mixed $value): bool
     {
         if (is_bool($value)) {

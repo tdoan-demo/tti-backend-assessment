@@ -12,11 +12,18 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Seeder that creates a small, coherent sample dataset for local review and manual API checks.
+ */
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * The sample graph is seeded inside a transaction so local demo data is either complete or rolled back cleanly.
+     */
     public function run(): void
     {
         DB::transaction(function (): void {
+            // Seed one patient and one instrument so the API is usable immediately after migrate:fresh --seed.
             $patient = Patient::factory()->create([
                 'name' => 'Ava Chen',
                 'date_of_birth' => '1991-06-12',
@@ -52,6 +59,7 @@ class DatabaseSeeder extends Seeder
                     'sort_order' => 3,
                 ]);
 
+            // Two submissions provide deterministic sample data for summary aggregation and newest-first ordering.
             $firstSubmission = Submission::factory()
                 ->for($patient)
                 ->for($instrument)

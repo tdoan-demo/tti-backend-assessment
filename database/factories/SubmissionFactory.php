@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<Submission>
  */
+/**
+ * Factory for creating submission records in tests and seed data.
+ */
 class SubmissionFactory extends Factory
 {
     protected $model = Submission::class;

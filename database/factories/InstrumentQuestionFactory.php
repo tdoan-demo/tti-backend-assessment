@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * @extends Factory<InstrumentQuestion>
  */
+/**
+ * Factory for creating instrument questions with convenient response-type states.
+ */
 class InstrumentQuestionFactory extends Factory
 {
     protected $model = InstrumentQuestion::class;
@@ -24,6 +27,9 @@ class InstrumentQuestionFactory extends Factory
         ];
     }
 
+    /**
+     * Convenience state for scale-based questions used in tests and sample data.
+     */
     public function scale(): static
     {
         return $this->state(fn () => [
@@ -31,6 +37,9 @@ class InstrumentQuestionFactory extends Factory
         ]);
     }
 
+    /**
+     * Convenience state for yes/no questions used in tests and sample data.
+     */
     public function yesNo(): static
     {
         return $this->state(fn () => [
@@ -38,6 +47,9 @@ class InstrumentQuestionFactory extends Factory
         ]);
     }
 
+    /**
+     * Convenience state for free-text questions used in tests and sample data.
+     */
     public function freeText(): static
     {
         return $this->state(fn () => [

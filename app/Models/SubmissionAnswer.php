@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Domain model representing an individual answer within a submission.
+ */
 class SubmissionAnswer extends Model
 {
     use HasFactory;

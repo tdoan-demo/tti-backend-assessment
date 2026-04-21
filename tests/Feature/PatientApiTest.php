@@ -6,6 +6,9 @@ use App\Models\Patient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Feature tests covering the patient creation contract.
+ */
 class PatientApiTest extends TestCase
 {
     use RefreshDatabase;

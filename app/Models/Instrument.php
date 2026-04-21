@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Domain model representing an instrument/questionnaire template.
+ */
 class Instrument extends Model
 {
     use HasFactory;

@@ -8,6 +8,9 @@ use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
 
+/**
+ * Validation rule that ensures each answer matches the selected question's response type.
+ */
 class AnswerMatchesQuestionType implements DataAwareRule, ValidationRule
 {
     protected array $data = [];
@@ -22,6 +25,9 @@ class AnswerMatchesQuestionType implements DataAwareRule, ValidationRule
         return $this;
     }
 
+    /**
+     * The rule infers the answer index from the attribute path, then looks up the matching question definition for type validation.
+     */
     public function validate(string $attribute, mixed $value, \Closure $fail): void
     {
         if (! preg_match('/^answers\.(\d+)\.answer$/', $attribute, $matches)) {
@@ -51,6 +57,9 @@ class AnswerMatchesQuestionType implements DataAwareRule, ValidationRule
     }
 
     /** @return Collection<int, object>|null */
+    /**
+     * Question metadata is cached per request so each answer validation does not re-query the database.
+     */
     protected function questions(): ?Collection
     {
         if ($this->questions !== null) {

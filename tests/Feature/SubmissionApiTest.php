@@ -12,6 +12,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
+/**
+ * Feature tests covering submission creation, retrieval, and summary behavior.
+ */
 class SubmissionApiTest extends TestCase
 {
     use RefreshDatabase;
@@ -252,6 +255,9 @@ class SubmissionApiTest extends TestCase
             ->assertJsonValidationErrors(['answers']);
     }
 
+    /**
+     * Provides a compact shared setup for submission-focused tests without hiding the domain structure behind global helpers.
+     */
     protected function seedReferenceData(): array
     {
         $patient = Patient::factory()->create([
@@ -283,6 +289,9 @@ class SubmissionApiTest extends TestCase
         return [$patient, $instrument, $questions];
     }
 
+    /**
+     * Creates a submission plus its answer rows so read/list/summary tests can focus on behavior rather than repetitive setup.
+     */
     protected function createSubmission(
         Patient $patient,
         Instrument $instrument,

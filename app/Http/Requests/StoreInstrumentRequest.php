@@ -6,6 +6,9 @@ use App\Support\AnswerValueCaster;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Form Request that validates instrument creation payloads.
+ */
 class StoreInstrumentRequest extends FormRequest
 {
     public function authorize(): bool

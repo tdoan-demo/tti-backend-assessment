@@ -5,6 +5,9 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Form Request that validates patient creation payloads.
+ */
 class StorePatientRequest extends FormRequest
 {
     public function authorize(): bool

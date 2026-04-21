@@ -8,6 +8,9 @@ use App\Rules\SubmissionQuestionsMatchInstrument;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Form Request that validates submission payloads before creation.
+ */
 class StoreSubmissionRequest extends FormRequest
 {
     public function authorize(): bool
@@ -15,6 +18,9 @@ class StoreSubmissionRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Submission validation combines top-level payload checks with custom domain rules for question membership and answer typing.
+     */
     public function rules(): array
     {
         return [

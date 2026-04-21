@@ -10,6 +10,9 @@ use App\Models\Patient;
 use App\Services\PatientSummaryService;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * HTTP controller responsible for aggregated patient summary endpoints.
+ */
 class PatientSummaryController extends Controller
 {
     public function show(

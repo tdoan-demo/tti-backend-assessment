@@ -5,6 +5,9 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * API resource for serializing the aggregated patient summary payload.
+ */
 class PatientSummaryResource extends JsonResource
 {
     public function toArray(Request $request): array

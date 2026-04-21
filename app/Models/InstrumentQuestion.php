@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Domain model representing a question that belongs to an instrument.
+ */
 class InstrumentQuestion extends Model
 {
     use HasFactory;

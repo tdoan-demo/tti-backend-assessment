@@ -8,6 +8,9 @@ use App\Http\Resources\PatientResource;
 use App\Models\Patient;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * HTTP controller responsible for patient creation endpoints.
+ */
 class PatientController extends Controller
 {
     public function store(StorePatientRequest $request): JsonResponse

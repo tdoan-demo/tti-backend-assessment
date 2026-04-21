@@ -11,10 +11,14 @@ use App\Services\SubmissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * HTTP controller responsible for listing, creating, and showing submissions.
+ */
 class SubmissionController extends Controller
 {
     public function index(Patient $patient): AnonymousResourceCollection
     {
+        // Submission listings are paginated and ordered newest-first for review-oriented API consumers.
         $submissions = $patient->submissions()
             ->with('instrument')
             ->latest('submitted_at')

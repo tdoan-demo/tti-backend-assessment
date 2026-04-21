@@ -6,6 +6,9 @@ use App\Models\InstrumentQuestion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Feature tests covering the instrument creation contract.
+ */
 class InstrumentApiTest extends TestCase
 {
     use RefreshDatabase;

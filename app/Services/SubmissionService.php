@@ -8,8 +8,14 @@ use App\Models\Submission;
 use App\Support\AnswerValueCaster;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Domain service that persists a submission and its answers as a single unit of work.
+ */
 class SubmissionService
 {
+    /**
+     * Submission creation is wrapped in a transaction so the submission row and all answer rows succeed or fail together.
+     */
     public function create(Patient $patient, array $validated): Submission
     {
         /** @var Instrument $instrument */

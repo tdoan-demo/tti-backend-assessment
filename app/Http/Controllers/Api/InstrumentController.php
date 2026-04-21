@@ -9,6 +9,9 @@ use App\Models\Instrument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * HTTP controller responsible for instrument creation endpoints.
+ */
 class InstrumentController extends Controller
 {
     public function store(StoreInstrumentRequest $request): JsonResponse

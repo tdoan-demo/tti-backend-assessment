@@ -9,8 +9,10 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 - Form Request validation with domain-level submission validation
 - API Resources for consistent response shapes
 - Service classes for submission creation and summary aggregation
+- Named rate limiters for read and write API routes
 - Seed data for local testing
 - Feature tests covering key endpoints
+- Docker Compose setup for local development
 
 ## Schema design
 
@@ -57,23 +59,23 @@ This repository contains a Laravel 13 implementation of the Patient Reported Out
 
 ## Design decisions and trade-offs
 
-- Questions and answers are modeled as separate relational tables instead of JSON blobs so the schema stays normalized and the summary endpoint remains queryable and easy to reason about.
+- **Questions and answers are modeled as separate relational tables** instead of JSON blobs so the schema stays normalized and the summary endpoint remains queryable and easy to reason about.
 
-- `answer_value` is stored in a single column rather than separate typed columns. This keeps the schema smaller for the assessment and keeps the submission flow straightforward, while leaving type enforcement in the validation layer. The trade-off is that the database itself is less strongly typed for answer storage.
+- **`answer_value` is stored in a single column** rather than separate typed columns. This keeps the schema smaller for the assessment and keeps the submission flow straightforward, while leaving type enforcement in the validation layer. The trade-off is that the database itself is less strongly typed for answer storage.
 
-- `submitted_at` is modeled explicitly on submissions rather than inferred from `created_at`. This keeps the API aligned with the domain requirement that an instrument is completed at a specific date and time, and it allows seed data and tests to exercise time-based behavior such as newest-first ordering and summary date ranges. The trade-off is that the API accepts a client-provided timestamp, which is useful for seeded or imported data and would likely need tighter controls in a production setting.
+- **`submitted_at` is modeled explicitly on submissions** rather than inferred from `created_at`. This keeps the API aligned with the domain requirement that an instrument is completed at a specific date and time, and it allows seed data and tests to exercise time-based behavior such as newest-first ordering and summary date ranges. The trade-off is that the API accepts a client-provided timestamp, which is useful for seeded or imported data and would likely need tighter controls in a production setting.
 
-- Submission creation and summary aggregation are separated into service classes to keep controllers focused on request/response orchestration. This keeps the business logic easier to follow, test, and extend.
+- **Submission creation and summary aggregation are separated into service classes** to keep controllers focused on request/response orchestration. This keeps the business logic easier to follow, test, and extend.
 
-- Eager loading is used for nested submission responses and summary aggregation to avoid N+1 query behavior when loading related instruments, questions, and answers. The trade-off is that the current summary implementation still favors readability over heavier query-level aggregation.
+- **Eager loading is used for nested submission responses and summary aggregation** to avoid N+1 query behavior when loading related instruments, questions, and answers. The trade-off is that the current summary implementation still favors readability over heavier query-level aggregation.
 
-- Submission validation uses custom Rule classes for question membership and answer type checks. This keeps the request layer more readable and makes the domain rules easier to test and evolve independently. The trade-off is additional validation classes compared with keeping all logic inline in a single Form Request.
+- **Submission validation uses custom Rule classes** for question membership and answer type checks. This keeps the request layer more readable and makes the domain rules easier to test and evolve independently. The trade-off is additional validation classes compared with keeping all logic inline in a single Form Request.
 
-- Factories are used for domain models in tests and seed setup to keep record creation consistent and reusable. This reduces duplication and makes test setup easier to extend as the domain grows. The trade-off is a slightly larger supporting code surface compared with creating all records inline.
+- **Factories are used for domain models in tests and seed setup** to keep record creation consistent and reusable. This reduces duplication and makes test setup easier to extend as the domain grows. The trade-off is a slightly larger supporting code surface compared with creating all records inline.
 
-- `.env.example` uses `SESSION_DRIVER=file` to keep local setup friction low for this API-focused assessment. This avoids requiring an additional sessions table that is outside the core scope of the exercise. The trade-off is that this favors fast local bootstrapping over database-backed session storage.
+- **`.env.example` uses `SESSION_DRIVER=file`** to keep local setup friction low for this API-focused assessment. This avoids requiring an additional sessions table that is outside the core scope of the exercise. The trade-off is that this favors fast local bootstrapping over database-backed session storage.
 
-- Instrument versioning is intentionally omitted to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve the meaning of historical submissions.
+- **Instrument versioning is intentionally omitted** to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve the meaning of historical submissions.
 
 ## Setup
 
@@ -96,7 +98,33 @@ php artisan serve
 php artisan test
 ```
 
+### Docker Compose (optional)
+
+A Docker Compose setup is included for a reproducible local environment with PHP and MySQL configured together. The Docker workflow uses `.env.docker.example` automatically.
+
+1. Start the containers:
+
+```bash
+docker compose up --build -d
+```
+
+2. Run the database setup inside the app container:
+
+```bash
+docker compose exec app php artisan migrate --seed
+```
+
+3. The API will be available at `http://localhost:8000`. MySQL is exposed on host port `3307` with database `tti_pro_api`, user `laravel`, and password `secret`.
+
+4. To run the test suite inside Docker:
+
+```bash
+docker compose exec app php artisan test
+```
+
 ## API routes
+
+The seeded sample data is intended for local exploration. The request examples below are written as a clean create flow and should use the ids returned by the preceding API calls rather than assuming fixed ids.
 
 ### Create patient
 
@@ -104,9 +132,9 @@ php artisan test
 
 ```json
 {
-  "name": "Ava Chen",
+  "name": "README Demo Patient",
   "date_of_birth": "1991-06-12",
-  "mrn": "MRN-10001"
+  "mrn": "MRN-README-001"
 }
 ```
 
@@ -116,7 +144,7 @@ php artisan test
 
 ```json
 {
-  "title": "Weekly Symptom Check-In",
+  "title": "README Demo Instrument",
   "description": "A short weekly symptom and quality of life assessment.",
   "questions": [
     {
@@ -138,25 +166,27 @@ php artisan test
 }
 ```
 
+Use the `id` returned from the patient response as `{patient_id}`. Use the `id` returned from the instrument response as `{instrument_id}`. Use the returned question ids as `{question_id_1}`, `{question_id_2}`, and `{question_id_3}`.
+
 ### Create submission
 
-`POST /api/patients/{patient}/submissions`
+`POST /api/patients/{patient_id}/submissions`
 
 ```json
 {
-  "instrument_id": 1,
+  "instrument_id": "{instrument_id}",
   "submitted_at": "2026-04-19T19:30:00Z",
   "answers": [
     {
-      "question_id": 1,
+      "question_id": "{question_id_1}",
       "answer": 4
     },
     {
-      "question_id": 2,
+      "question_id": "{question_id_2}",
       "answer": true
     },
     {
-      "question_id": 3,
+      "question_id": "{question_id_3}",
       "answer": "Fatigue improved after changing dose timing."
     }
   ]
@@ -165,21 +195,20 @@ php artisan test
 
 ### List submissions
 
-`GET /api/patients/{patient}/submissions`
+`GET /api/patients/{patient_id}/submissions`
 
 ### Show a submission
 
-`GET /api/patients/{patient}/submissions/{submission}`
+`GET /api/patients/{patient_id}/submissions/{submission}`
 
 ### Summary
 
-`GET /api/patients/{patient}/summary?instrument_id=1`
+`GET /api/patients/{patient_id}/summary?instrument_id={instrument_id}`
 
 ## What I would add with more time
 
-- OpenAPI documentation
-- Auth and rate limiting scaffolding
-- Stronger API error formatting standardization in exception handlers
-- Instrument versioning / question snapshots for historical fidelity
-- More granular unit tests around summary aggregation helpers
-- Docker Compose for reproducible local setup
+- OpenAPI / Swagger documentation for a formal machine-readable API contract in addition to the README examples.
+- Authentication and authorization, likely using Laravel Sanctum, so patient and submission data can be scoped to authenticated users and roles.
+- Instrument versioning or question snapshots so historical submissions remain semantically stable if an instrument changes later.
+- More standardized API error formatting so validation, not-found, and domain errors follow a more consistent response shape.
+- Additional test coverage around larger summary aggregation scenarios, malformed payload edge cases, and broader request-contract validation.

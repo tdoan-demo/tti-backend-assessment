@@ -6,6 +6,9 @@ use App\Models\Instrument;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\ValidationRule;
 
+/**
+ * Validation rule that ensures a submitted question belongs to the selected instrument.
+ */
 class InstrumentQuestionBelongsToInstrument implements DataAwareRule, ValidationRule
 {
     protected array $data = [];
@@ -20,6 +23,9 @@ class InstrumentQuestionBelongsToInstrument implements DataAwareRule, Validation
         return $this;
     }
 
+    /**
+     * This prevents cross-instrument question IDs from being submitted against the wrong instrument.
+     */
     public function validate(string $attribute, mixed $value, \Closure $fail): void
     {
         $expectedQuestionIds = $this->expectedQuestionIds();
@@ -34,6 +40,9 @@ class InstrumentQuestionBelongsToInstrument implements DataAwareRule, Validation
     }
 
     /** @return array<int>|null */
+    /**
+     * The valid question IDs are cached per request because the same instrument is checked across multiple answer rows.
+     */
     protected function expectedQuestionIds(): ?array
     {
         if ($this->expectedQuestionIds !== null) {
