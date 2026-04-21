@@ -1,6 +1,6 @@
 # TTI Backend Engineer Assessment - Patient Reported Outcomes (PRO) API
 
-This source package is designed to drop into a fresh Laravel 11 project. It implements the required PRO API using Laravel migrations, Eloquent models, Form Requests, API Resources, service classes, seed data, and feature tests.
+This repository contains a Laravel 11 implementation of the Patient Reported Outcomes (PRO) API. It implements the required PRO API using Laravel migrations, Eloquent models, Form Requests, API Resources, service classes, seed data, and feature tests.
 
 ## What is included
 
@@ -63,11 +63,12 @@ This source package is designed to drop into a fresh Laravel 11 project. It impl
 
 ## Setup
 
-1. Start from a fresh Laravel 11 application.
-2. Copy these files into the matching locations in the Laravel app.
-3. Configure `.env` for MySQL.
-4. If your application does not already load `routes/api.php`, make sure `bootstrap/app.php` includes API routing.
-5. Run:
+1. Clone the repository and move into the project directory.
+2. Install PHP dependencies with `composer install`.
+3. Copy `.env.example` to `.env`.
+4. Configure `.env` for MySQL, including `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`. The project expects a local MySQL database. `SESSION_DRIVER=file` is used in `.env.example` to keep local setup friction low for this API-focused assessment.
+5. Generate an application key with `php artisan key:generate`.
+6. Run:
 
 ```bash
 php artisan migrate
@@ -75,7 +76,7 @@ php artisan db:seed
 php artisan serve
 ```
 
-6. Run tests:
+7. Run tests:
 
 ```bash
 php artisan test
@@ -164,6 +165,7 @@ php artisan test
 
 - Instrument versioning is intentionally omitted to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve historical semantics.
 - Summary aggregation is implemented in a service layer with eager loading for readability. If the dataset grows substantially, the next step would be pushing more aggregation directly into grouped SQL queries or cached summary projections.
+- `answer_value` is stored in a single column rather than separate typed columns. This keeps the schema smaller for the assessment and keeps the API implementation straightforward, while leaving type enforcement in the validation layer.
 
 ## What I would add with more time
 
@@ -172,3 +174,4 @@ php artisan test
 - Stronger API error formatting standardization in exception handlers
 - Instrument versioning / question snapshots for historical fidelity
 - More granular unit tests around summary aggregation helpers
+- Docker Compose for reproducible local setup
