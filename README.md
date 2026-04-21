@@ -1,97 +1,174 @@
-# TTI Backend Engineer Assessment
+# TTI Backend Engineer Assessment - Patient Reported Outcomes (PRO) API
 
-## Patient Reported Outcomes (PRO) API
+This source package is designed to drop into a fresh Laravel 11 project. It implements the required PRO API using Laravel migrations, Eloquent models, Form Requests, API Resources, service classes, seed data, and feature tests.
 
-### Overview
+## What is included
 
-Build a RESTful API that allows patients to submit and retrieve Patient Reported Outcomes (PROs); structured symptom and quality-of-life reports tied to their treatment. This exercise reflects the kind of work you would do on the Wave Health platform.
+- Normalized schema with indexes and foreign keys
+- RESTful API endpoints for patients, instruments, submissions, and summaries
+- Form Request validation with domain-level submission validation
+- API Resources for consistent response shapes
+- Service classes for submission creation and summary aggregation
+- Seed data for local testing
+- Feature tests covering key endpoints
 
-**Time expectation:** 3–4 hours. We respect your time. Focus on quality over quantity. A well-architected subset is better than a rushed complete solution.
+## Schema design
 
-**Stack:** PHP 8.4+, Laravel 11+, MySQL 8+
+### Tables
 
-### Background
+- `patients`
+  - `id`
+  - `name`
+  - `date_of_birth`
+  - `mrn` (unique)
+  - timestamps
 
-Wave Health helps patients with chronic conditions track their treatment experiences. Patients periodically complete questionnaires (called "instruments") that capture symptoms, side effects, and quality of life. Clinicians use this data to monitor patients remotely.
+- `instruments`
+  - `id`
+  - `title`
+  - `description`
+  - timestamps
 
-### Requirements
+- `instrument_questions`
+  - `id`
+  - `instrument_id` (FK)
+  - `prompt`
+  - `response_type` (`scale_1_5`, `yes_no`, `free_text`)
+  - `sort_order`
+  - timestamps
+  - unique index on (`instrument_id`, `sort_order`)
 
-#### Data Model
+- `submissions`
+  - `id`
+  - `patient_id` (FK)
+  - `instrument_id` (FK)
+  - `submitted_at`
+  - timestamps
+  - index on `instrument_id`
+  - composite index on (`patient_id`, `submitted_at`)
 
-Design and implement a schema to support the following:
+- `submission_answers`
+  - `id`
+  - `submission_id` (FK)
+  - `instrument_question_id` (FK)
+  - `answer_value`
+  - timestamps
+  - unique index on (`submission_id`, `instrument_question_id`)
 
-- **Patients** — A patient has a name, date of birth, and a medical record number (MRN)
-- **Instruments** — A questionnaire template with a title, description, and a set of ordered questions. Each question has a prompt and a response type (one of: `scale_1_5`, `yes_no`, `free_text`)
-- **Submissions** — A completed instance of an instrument by a patient at a specific date/time, containing the patient's answers to each question
+### Design decisions
 
-#### API Endpoints
+- Questions and answers are modeled as separate relational tables instead of JSON blobs so the schema stays normalized and the summary endpoint can be queried and reasoned about cleanly.
+- `answer_value` is stored as text for simplicity. Type safety is enforced at the application layer using the instrument question's `response_type`.
+- Nested route scoping is used for patient submissions so requests cannot fetch a submission outside the parent patient context.
 
-Implement the following endpoints:
+## Setup
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/patients` | Create a new patient |
-| `POST` | `/api/instruments` | Create a new instrument with questions |
-| `POST` | `/api/patients/{id}/submissions` | Submit a completed instrument for a patient |
-| `GET` | `/api/patients/{id}/submissions` | List all submissions for a patient (paginated, newest first) |
-| `GET` | `/api/patients/{id}/submissions/{id}` | Get a single submission with all answers |
-| `GET` | `/api/patients/{id}/summary` | Aggregate summary (see below) |
+1. Start from a fresh Laravel 11 application.
+2. Copy these files into the matching locations in the Laravel app.
+3. Configure `.env` for MySQL.
+4. If your application does not already load `routes/api.php`, make sure `bootstrap/app.php` includes API routing.
+5. Run:
 
-#### Summary Endpoint
+```bash
+php artisan migrate
+php artisan db:seed
+php artisan serve
+```
 
-`GET /api/patients/{id}/summary?instrument_id={id}`
+6. Run tests:
 
-Returns an aggregated view of a patient's responses to a specific instrument over time:
+```bash
+php artisan test
+```
 
-- For `scale_1_5` questions: return the **average score** across all submissions
-- For `yes_no` questions: return the **percentage of "yes" responses**
-- For `free_text` questions: return the **count of submissions** with a non-empty response
-- Include the **total number of submissions** and the **date range** (earliest to latest)
+## API routes
 
-#### Validation Rules
+### Create patient
 
-- Submissions must reference a valid patient and instrument
-- All questions in the instrument must be answered
-- Answers must match the question's response type:
-  - `scale_1_5`: integer between 1 and 5
-  - `yes_no`: boolean
-  - `free_text`: string (may be empty)
-- MRN must be unique across patients
-- Return appropriate error responses with clear messages
+`POST /api/patients`
 
-### What We're Evaluating
+```json
+{
+  "name": "Ava Chen",
+  "date_of_birth": "1991-06-12",
+  "mrn": "MRN-10001"
+}
+```
 
-| Area | What We're Looking For |
-|------|----------------------|
-| **Database Design** | Normalized schema, appropriate indexes, well-thought-out relationships and migrations |
-| **API Design** | RESTful conventions, consistent response structures, proper HTTP status codes |
-| **Laravel Proficiency** | Effective use of Eloquent, Form Requests, Resources, and other Laravel patterns |
-| **Validation & Error Handling** | Robust input validation, graceful error responses, edge case handling |
-| **Code Quality** | Clean, readable code with clear naming, separation of concerns, and SOLID principles |
-| **Security Awareness** | Consideration for data sensitivity; mass assignment protection, input sanitization, etc. |
+### Create instrument
 
-### Bonus (Not Required)
+`POST /api/instruments`
 
-- Automated tests (Feature or Unit) for key endpoints
-- API documentation (e.g., OpenAPI/Swagger or a simple markdown doc)
-- Docker Compose setup for local development
-- Rate limiting or authentication scaffolding
-- Any performance considerations (query optimization, eager loading, caching)
+```json
+{
+  "title": "Weekly Symptom Check-In",
+  "description": "A short weekly symptom and quality of life assessment.",
+  "questions": [
+    {
+      "prompt": "Rate your fatigue this week.",
+      "response_type": "scale_1_5",
+      "sort_order": 1
+    },
+    {
+      "prompt": "Did you experience nausea?",
+      "response_type": "yes_no",
+      "sort_order": 2
+    },
+    {
+      "prompt": "Anything else you want your care team to know?",
+      "response_type": "free_text",
+      "sort_order": 3
+    }
+  ]
+}
+```
 
-### Submission Instructions
+### Create submission
 
-1. **Fork** the repository
-2. Complete the exercise on a feature branch
-3. Open a **Pull Request** back to the original repository with:
-   - A clear PR description summarizing your approach
-   - A `README.md` that includes:
-     - Setup instructions (we should be able to run it locally)
-     - Any design decisions or trade-offs you made
-     - What you would improve or add with more time
-4. Include database migrations and a seeder with sample data
+`POST /api/patients/{patient}/submissions`
 
-### Notes
+```json
+{
+  "instrument_id": 1,
+  "submitted_at": "2026-04-19T19:30:00Z",
+  "answers": [
+    {
+      "question_id": 1,
+      "answer": 4
+    },
+    {
+      "question_id": 2,
+      "answer": true
+    },
+    {
+      "question_id": 3,
+      "answer": "Fatigue improved after changing dose timing."
+    }
+  ]
+}
+```
 
-- This is a simplified version of a real domain we work in. Don't overthink it — we want to see how you approach the problem, not a production-ready system.
-- If you have questions or need clarification, email armando@tti.care. Asking good questions is a positive signal.
-- We will review your submission before the technical interview and use it as a starting point for discussion. Be prepared to walk through your design decisions and talk about how you'd extend it.
+### List submissions
+
+`GET /api/patients/{patient}/submissions`
+
+### Show a submission
+
+`GET /api/patients/{patient}/submissions/{submission}`
+
+### Summary
+
+`GET /api/patients/{patient}/summary?instrument_id=1`
+
+## Trade-offs
+
+- Instrument versioning is intentionally omitted to keep the solution aligned with the exercise scope. In a production system, edited instruments would likely require versioning or question snapshots to fully preserve historical semantics.
+- Summary aggregation is implemented in a service layer with eager loading for readability. If the dataset grows substantially, the next step would be pushing more aggregation directly into grouped SQL queries or cached summary projections.
+
+## What I would add with more time
+
+- OpenAPI documentation
+- Auth and rate limiting scaffolding
+- Stronger API error formatting standardization in exception handlers
+- Instrument versioning / question snapshots for historical fidelity
+- More granular unit tests around summary aggregation helpers
